@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TestScript>
+	<TestScriptInfo>
+		<ControlName>EKS215aCharging</ControlName>
+		<WiringPlanNumber>99542709</WiringPlanNumber>
+		<TesterProgramNameOnPLC>EKS215a</TesterProgramNameOnPLC>
+		<SupplierNumber>818034</SupplierNumber>
+	</TestScriptInfo>
+	<DataBaseIntegration>
+		<Columns>
+			<!--		  ColName in DB - Name in Memory/Script	-->
+			<Column Name="SupplierNumber">SupplierNumber</Column> 
+			<Column Name="ControlName">ControlName</Column>
+			<Column Name="WiringPlanNumber">WiringPlanNumber</Column>
+			<Column Name="ArticleNumber">ArticleNumber</Column>
+			<Column Name="ProductionNumber">ProductionNumber</Column> 
+			<Column Name="RunningSerialNumber">RunningSerialNumber</Column> 
+			<Column Name="CommissioningPosition">CommissioningPosition</Column>
+			<Column Name="SerialNoBeckhoff">SerialNoBeckhoff</Column>
+			<Column Name="SerialNoDisplay">SerialNoDisplay</Column>
+			<Column Name="SerialNoCVC">SerialNoCVC</Column>
+			<Column Name="Barcode">BARCODE</Column>
+			<Column Name="TestDate">TEST_DATE</Column> 
+			<Column Name="Log">LOG_FP</Column>
+		</Columns>
+	</DataBaseIntegration>
+	<Devices>
+		<TestDevice Name="EksK" Alias="SUT">
+			<Ip>192.168.100.1</Ip>
+			<AmsNetId>5.12.8.70.1.1</AmsNetId>
+		</TestDevice>
+		<TestDevice Name="TestBedPLC" Alias="Tester">
+			<Ip>192.168.100.3</Ip>
+			<AmsNetId>5.12.8.70.1.2</AmsNetId>
+		</TestDevice>
+		<TestDevice Name="Kollmorgen CVC" Alias="CVC">
+			<Ip>192.168.100.100</Ip>
+		</TestDevice>
+	</Devices>
+	<TestSteps>
+		<TestStep Action="UserConfirmation" UserMessage="This test script is for the cabinet EKS215a, wiring plan number 99542709." Image="Folie1.jpg"/>
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Confirm label ##############</TestStep>
+		<TestStep Action="LabelConfirm" />
+
+		<!-- #################### -->
+		<!-- Test Bed Preparation -->
+		<!-- #################### -->
+
+		<!-- Connect to tester PLC -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Preparing tester ##############</TestStep>
+		<TestStep Action="Ping">Tester</TestStep>
+		<TestStep Action="ADSConnect">Tester</TestStep>
+
+		<!-- Reset all outputs -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Reset outputs and CAN ##############</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.ResetAll:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.ResetAll:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.ResetAll:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.ResetAll:=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="everything is completely off." Timeout="10000">Tester.TransferInputs.AllFalse=true</TestStep>
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Initialize Test Setup ##############</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Has the Beckhoff CX9020 SD card been flashed?" Image="Folie2.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Has the Kollmorgen CVC been flashed?" Image="Folie3.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Are X301 and X302 connected?" Image="Folie4.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Are 4H18 and 4H19 connected?" Image="Folie5.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Is XB8B19 (Sick S100) connected?" Image="Folie85.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Is the LAN cable connected between tester and cabinet?" Image="Folie6.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Is charging plate adapter attached?" Image="Folie83.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Connection: Are charging plate clamps attached?" Image="Folie84.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Are all emergency stop buttons in the normal position?" Image="Folie7.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is power switch turned to I (on) and mode switch turned to automatic?" Image="Folie8.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is the remote control attached?" Image="Folie9.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is the correct DC/DC transformator DVC251 24-24V installed?" Image="Folie10.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Have all screws been checked if they are loose?">No:Yes</TestStep>
+
+		<!-- Test FRG System -->
+		<TestStep Action="LogMessage">#### Check FRG System Signal / Reset Button ####</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_01=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_05:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_01=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn the main power switch off!" Image="Folie79.jpg" Timeout="90000">Tester.TransferInputs.DI_2_01=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn the main power switch back on!" Image="Folie80.jpg" Timeout="90000">Tester.TransferInputs.DI_2_01=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Press the reset button" Image="Folie81.jpg" Timeout="90000">Tester.TransferInputs.DI_2_01=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Let go of the reset button!" Image="Folie82.jpg" Timeout="90000">Tester.TransferInputs.DI_2_01=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_05:=false</TestStep>
+
+		<!-- #################### -->
+		<!-- Fuse Test Cabinet 	  -->
+		<!-- #################### -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Remove fuse, turn on power of SUT ##############</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please remove all fuses!" Image="Folie11.jpg">Cancel:All removed</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		
+		<TestStep Action="ADSCheck" UserMessage="everything is completely off." Timeout="2000">Tester.TransferInputs.AllFalse=true!</TestStep>
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check main fuse ###########</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse 7F11 (10A, red)!" Image="Folie12.jpg">Cancel:Done</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check fuse F3.1 ###########</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.1 (4A, pink)!" Image="Folie13.jpg">Cancel:Done</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is Beckhoff starting up?" Image="Folie19.jpg">No:Yes</TestStep>
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check fuse F3.2 ###########</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.2 (4A, pink)!" Image="Folie14.jpg">Cancel:Done</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Are the fans running?" Image="Folie20.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Checking potential X301:6..." Timeout="200">Tester.TransferInputs.DI_6_01=true</TestStep>
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check fuse F3.3 ###########</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.3 (4A, pink)!" Image="Folie15.jpg">Cancel:Done</TestStep>
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check fuse F3.4 ###########</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.4 (4A, pink)!" Image="Folie16.jpg">Cancel:Done</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is ethernet switch on now?" Image="Folie21.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is WIFI module on now?" Image="Folie22.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Checking potential X301:39..." Timeout="200">Tester.TransferInputs.DI_6_03=true</TestStep> AFTER F3.4 CABINET ERROR
+
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">########### Check fuse F3.5 ###########</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.5 (4A, pink)!" Image="Folie17.jpg">Cancel:Done</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is Kollmorgen CVC on now?" Image="Folie23.jpg">No:Yes</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is Kollmorgen Display starting now?" Image="Folie24.jpg">No:Yes</TestStep>
+		
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Please install fuse F3.6 (4A, pink)!" Image="fuses18.jpg">Cancel:Done</TestStep>
+		
+		<!-- #################### -->
+		<!--   SUT  Preparation   -->
+		<!-- #################### -->
+		<TestStep Action="UserConfirmation" UserMessage="System will be switch off and on again for a fresh start.">Cancel:Ok</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="Wait_ms" UserMessage="until completely off">10000</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=true</TestStep>
+
+		<!-- Connect to SUT -->
+		<TestStep Action="Ping" Timeout="45000">SUT</TestStep>
+		<TestStep Action="Wait_ms" UserMessage="Wait until PLC program is running...">20000</TestStep>
+		<TestStep Action="ADSConnect">SUT</TestStep>
+		<TestStep Action="Wait_ms" UserMessage="Wait until PLC responds...">10000</TestStep>
+
+		<!-- Start tester mode -->
+		<TestStep Action="ADSWrite">SUT.TesterServer.TesterProgram:STRING:=OFF</TestStep>
+		<TestStep Action="ADSCheck" Timeout="5000" UserMessage="Wait until PLC is ready for testing mode...">SUT.TesterServer.TesterStep:INT=40</TestStep>
+		<TestStep Action="ADSRead">[SerialNoBeckhoff]:=SUT.TesterServer.stDevIdent.strHardwareSerialNo:STRING</TestStep>
+		<TestStep Action="ADSWrite">SUT.TesterServer.TesterProgram:STRING:=AGVBox</TestStep>
+		<TestStep Action="ADSWrite">SUT.TesterServer.HardwareSerialNo:STRING:=[SerialNoBeckhoff]</TestStep>
+		<TestStep Action="ADSCheck" Timeout="5000" UserMessage="Wait until PLC testing mode is on...">SUT..TesterModeOn=true</TestStep>
+		
+		
+		
+
+
+		<!-- ####################### -->
+		<!-- Automatic SUT  Testing  -->
+		<!-- ####################### -->
+
+		<!-- Safety Relays -->
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_6_01=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_6_03=true</TestStep> 
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DITrueCount:INT=2</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.EnableEmergencyStop:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_06=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_07=true</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DITrueCount:INT=4</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.EnableEmergencyStop:=false</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_6_01=true</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_6_03=true</TestStep> 
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DITrueCount:INT=2</TestStep>
+		
+		<!-- Check charging option -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Testing Charging Option ##############</TestStep>
+		<TestStep Action="LogMessage">#### CAN_H ####</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_10=false</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_11=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_16:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_10=false!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_11=false!</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingCAN:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_10=true</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_11=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_16:=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingCAN:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_10=false!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_11=false!</TestStep>
+		
+		<TestStep Action="LogMessage">#### CAN_L ####</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_01:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_10=false!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_11=false!</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingCAN:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_11=true</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_10=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_01:=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingCAN:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_10=false!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_11=false!</TestStep>
+		
+		<TestStep Action="LogMessage">#### LG_ERK ####</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_12=false!</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_02:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_12=false!</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ActivateAutoCharging:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_12=true</TestStep> 
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ActivateAutoCharging:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_12=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_02:=false</TestStep>
+		
+		<!-- TODO find solution for this test -->
+	    <TestStep Action="LogMessage">#### 24V Bypass / Charger Present ####</TestStep>-->
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=false!</TestStep>-->
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_15:=true</TestStep>-->
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=true</TestStep>-->
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_15:=false</TestStep>-->
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=false</TestStep>-->
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_13:=true</TestStep>--> 
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=false!</TestStep>--> 
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ActivateAutoCharging:=true</TestStep>--> 
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=true</TestStep>--> 
+	    <TestStep Action="ADSWrite">SUT.BatteryOutput.ActivateAutoCharging:=false</TestStep>--> 
+		<TestStep Action="ADSCheck" Timeout="200">SUT.BatteryInput.LiIonIsChargerPresent=false</TestStep>-->
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_13:=false</TestStep>-->
+		
+		<TestStep Action="LogMessage">#### +UB ####</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_15=false!</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_14:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_15=false!</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingContactor:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_15=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingContactor:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_15=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_14:=false</TestStep>
+		
+		<TestStep Action="LogMessage">#### -UB ####</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_14=false!</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_11:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_14=false!</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingContactor:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_14=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.BatteryOutput.ReleaseAutoChargingContactor:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_14=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_11:=false</TestStep>
+		
+		
+		
+		<!-- Check Analog I/O -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Checking Analog I/O ##############</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="LogMessage">#### LiftmastAnalogLeftOutside ###</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_04:INT:=1000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;1100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&gt;900</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_04:INT:=16000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;16160</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&gt;15840</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_04:INT:=30000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;30300</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&gt;29700</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_04:INT:=0</TestStep>
+		
+		<TestStep Action="LogMessage">#### LiftmastAnalogRightOutside ###</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_03:INT:=1000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;1100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&gt;900</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_03:INT:=16000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;16050</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&gt;15840</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_03:INT:=30000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;30300</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&gt;29700</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_03:INT:=0</TestStep>
+		
+		<TestStep Action="LogMessage">#### LiftmastAnalogRightInside ###</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_01:INT:=1000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;1100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&gt;900</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_01:INT:=16000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;16160</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&gt;15840</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_01:INT:=30000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;30300</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&gt;29700</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_01:INT:=0</TestStep>
+		
+		<TestStep Action="LogMessage">#### LiftmastAnalogLeftInside ###</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_02:INT:=1000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;1100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&gt;900</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_02:INT:=16000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;16160</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&gt;15840</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_02:INT:=30000</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&lt;30300</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftInside:INT&gt;29700</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogRightInside:INT&lt;100</TestStep>
+		<TestStep Action="ADSCheck">SUT.OptionalInput.LiftmastAnalogLeftOutside:INT&lt;100</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.AO_9_02:INT:=0</TestStep>
+
+		<!-- CAN1: Vehicle CAN -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Testing Vehicle CAN ##############</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_Master_Error:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_Master_RxErrorCounter:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_Master_TxErrorCounter:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_SUTSlave_NodeState:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_TesterSlave_NodeState:USINT=0</TestStep>
+
+		<TestStep Action="LogMessage">#### Testing vehicle CAN Roundtrip Master -> Last Slave ###</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_TesterSlave_SlaveRxPDO[1][0]:BYTE=0</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_TesterSlave_MasterRxPDO[1][0]:BYTE:=3</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_TesterSlave_SlaveRxPDO[1][0]:BYTE=3</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_TesterSlave_MasterRxPDO[1][0]:BYTE:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_TesterSlave_SlaveRxPDO[1][0]:BYTE=0</TestStep>
+
+		<TestStep Action="LogMessage">#### Testing vehicle CAN Roundtrip Last Slave -> Master ###</TestStep>
+		<TestStep Action="ADSCheck">Tester.RunCanOpen.CAN1_TesterSlave_MasterTxPDO[1][1]:BYTE=0</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_TesterSlave_SlaveTxPDO[1][1]:BYTE:=5</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_TesterSlave_MasterTxPDO[1][1]:BYTE=5</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_TesterSlave_SlaveTxPDO[1][1]:BYTE:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_TesterSlave_MasterTxPDO[1][1]:BYTE=0</TestStep>
+
+		<TestStep Action="LogMessage">#### Testing vehicle CAN signal SUT -> "vehicle" tester slave 1 ###</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_SUTSlave_RxPDO[1][0]:BYTE:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SafetyInput.VehicleInAutomaticMode=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_SUTSlave_RxPDO[1][0]:BYTE:=1</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SafetyInput.VehicleInAutomaticMode=true</TestStep>
+		<TestStep Action="ADSWrite">Tester.RunCanOpen.CAN1_SUTSlave_RxPDO[1][0]:BYTE:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SafetyInput.VehicleInAutomaticMode=false</TestStep>
+
+		<TestStep Action="LogMessage">#### Testing vehicle CAN signal "vehicle" tester slave 1 -> SUT ###</TestStep>
+		<TestStep Action="ADSWrite">SUT.ActorOutput.TargetLiftSpeed_pc:SINT:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_SUTSlave_TxPDO[2][4]:BYTE=0</TestStep>
+		<TestStep Action="ADSWrite">SUT.ActorOutput.TargetLiftSpeed_pc:SINT:=123</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_SUTSlave_TxPDO[2][4]:BYTE=123</TestStep>
+		<TestStep Action="ADSWrite">SUT.ActorOutput.TargetLiftSpeed_pc:SINT:=0</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.RunCanOpen.CAN1_SUTSlave_TxPDO[2][4]:BYTE=0</TestStep>
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Testing Navigation CAN ##############</TestStep>
+		<TestStep Action="ADSCheck">SUT.HardwareLayerInput.NavRxErrorCounter:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">SUT.HardwareLayerInput.NavTxErrorCounter:USINT=0</TestStep>
+		<TestStep Action="ADSCheck">SUT.HardwareLayerInput.NavNodeState:USINT=0</TestStep>
+		
+
+		<!-- #################### -->
+		<!-- Manual SUT  Testing  -->
+		<!-- #################### -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Testing Light, Sound and Buttons ##############</TestStep>
+
+		<TestStep Action="LogMessage">#### Check for emergency stop short circuit ####</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_06:=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_02=false!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_03=false!</TestStep>
+		
+		<TestStep Action="LogMessage">#### Check idle emergency stop signal ####</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_06:=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_02=true!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_03=true!</TestStep>
+
+		<TestStep Action="LogMessage">#### Check idle acknowledge signal ####</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=true</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButton=false</TestStep>
+		
+		<TestStep Action="LogMessage">#### Check idle mode switch signal ####</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_08=false</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_09=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_09:=true</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_08=false</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_09=true</TestStep>
+		
+			
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Sick S100 ####</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelA:=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelB:=false</TestStep>
+		<TestStep Action="ADSCheck">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck">SUT.SensorInput.S100StopQ2=true</TestStep>
+		
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelA:=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelB:=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Waiting for field to be free!" Image="Folie70.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand closer to sensor from LEFT until field is occupied!" Image="Folie71.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand away from sensor until field is free!" Image="Folie72.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+		
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelA:=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelB:=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Waiting for field to be free!" Image="Folie73.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand closer to sensor from FRONT until field is occupied!" Image="Folie74.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand away from sensor until field is free!" Image="Folie75.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+		
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelA:=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.SafetyOutput.S100ChannelB:=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Waiting for field to be free!" Image="Folie76.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand closer to sensor from RIGHT until field is occupied!" Image="Folie77.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Move hand away from sensor until field is free!" Image="Folie78.jpg" Timeout="90000">SUT.SensorInput.S100StopQ1=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">SUT.SensorInput.S100StopQ2=true</TestStep>
+	
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Cabinet Lights ####</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_03:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is the top flash flashing?" Image="Folie63.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_03:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_04:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is the LEFT blinker (5E9) on?" Image="Folie64.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_04:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_05:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is the RIGHT blinker (5E10) on?" Image="Folie65.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_5_05:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_07:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is lamp 4H18 (Load Direction) on?" Image="Folie66.jpg">No:Yes</TestStep> <!-- TODO check if h18/19 are right -->
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_07:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_08:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Is lamp 4H19 (Drive Direction) on?" Image="Folie67.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_08:=false</TestStep>
+		
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Front Panel ####</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=false</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Front panel: Are all lights off?" Image="Folie25.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Front panel: Is the acknowledge button light on?" Image="Folie26.jpg">No:Yes</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Front panel: Please press the acknowledge button!" Image="Folie27.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=true</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Front panel: Please let go of the acknowlege button!" Image="Folie28.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=false</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=false</TestStep>
+
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.GreenLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Front panel: Is the green lamp on now?" Image="Folie29.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.GreenLamp:=false</TestStep>
+
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.BlueLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Front panel: Is the blue lamp on now?" Image="Folie30.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.BlueLamp:=false</TestStep>
+
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_10:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Front panel: Is the mode switch lamp on now?" Image="Folie31.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_10:=false</TestStep>
+
+		<TestStep Action="ADSCheck" 
+				UserMessage="Please turn the mode switch to manual!"
+				Image="Folie32.jpg"
+				Timeout="90000">Tester.TransferInputs.DI_2_08=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_09=false</TestStep>
+		<TestStep Action="ADSCheck" 
+				UserMessage="Please turn the mode switch to automatic!"
+				Image="Folie33.jpg"
+				Timeout="90000">Tester.TransferInputs.DI_2_08=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_09=true</TestStep>
+		
+		<TestStep Action="ADSCheck" UserMessage="Press the emergency button on the front panel!" Image="Folie34.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Pull the emergency button to bring it back into normal operation" Image="Folie35.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=true</TestStep>
+
+
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Side Panel Left ####</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel left: Are all lights off?" Image="Folie36.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel left: Is the acknowledge button light on?" Image="Folie37.jpg">No:Yes</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Side panel left: Please press the acknowledge button!" Image="Folie38.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=true</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel left: Please let go of the acknowlege button!" Image="Folie39.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=false</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.WhiteLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel left: Is the cancel button light on?" Image="Folie40.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel left: Please press the cancel button!" Image="Folie41.jpg" Timeout="90000">SUT.SafetyInput.CancelButton=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel left: Please let go of the cancel button!" Image="Folie42.jpg" Timeout="90000">SUT.SafetyInput.CancelButton=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.WhiteLamp:=false</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Press the emergency button on the left side panel!" Image="Folie43.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Pull the emergency button to bring it back into normal operation" Image="Folie44.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=true</TestStep>
+		
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Side Panel Right ####</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel right: Are all lights off?" Image="Folie45.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel right: Is the acknowledge button light on?" Image="Folie46.jpg">No:Yes</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Side panel right: Please press the acknowledge button!" Image="Folie47.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=true</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel right: Please let go of the acknowlege button!" Image="Folie48.jpg" Timeout="90000">SUT.SafetyInput.AcknowledgeButton=false</TestStep>
+		<TestStep Action="ADSCheck">SUT.SafetyInput.AcknowledgeButtonInverted=true</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.YellowLamp:=false</TestStep>
+		
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.WhiteLamp:=true</TestStep>
+		<TestStep Action="UserConfirmation" UserMessage="Side panel right: Is the cancel button light on?" Image="Folie49.jpg">No:Yes</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel right: Please press the cancel button!" Image="Folie50.jpg" Timeout="90000">SUT.SafetyInput.CancelButton=true</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Side panel right: Please let go of the cancel button!" Image="Folie51.jpg" Timeout="90000">SUT.SafetyInput.CancelButton=false</TestStep>
+		<TestStep Action="ADSWrite">SUT.LightAndSoundOutput.WhiteLamp:=false</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Press the emergency button on the right side panel!" Image="Folie52.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Pull the emergency button to bring it back into normal operation" Image="Folie53.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=true</TestStep>
+		
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_02=true!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_03=true!</TestStep>
+		
+		
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">#### Testing Remote Control ####</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Press the emergency button on the remote control!" Image="Folie54.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=false</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Pull the emergency button to bring it back into normal operation" Image="Folie55.jpg" Timeout="90000">Tester.TransferInputs.DI_2_02=true</TestStep>
+		<TestStep Action="ADSCheck" Timeout="200">Tester.TransferInputs.DI_2_03=true</TestStep>
+		
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_02=true!</TestStep>
+		<TestStep Action="ADSCheck" Timeout="1000">Tester.TransferInputs.DI_2_03=true!</TestStep>
+		
+		<TestStep Action="ADSCheck">Tester.TransferInputs.AI_10_01:INT&lt;9000</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.AI_10_01:INT&gt;8000</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn green lever all the way to the right!" Image="Folie56.jpg" Timeout="90000">Tester.TransferInputs.AI_10_01:INT&lt;2000</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn green lever all the way to the left" Image="Folie57.jpg" Timeout="90000">Tester.TransferInputs.AI_10_01:INT&gt;14000</TestStep>
+
+		<TestStep Action="ADSCheck">Tester.TransferInputs.AI_10_03:INT&lt;9000</TestStep>
+		<TestStep Action="ADSCheck">Tester.TransferInputs.AI_10_03:INT&gt;8000</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn black lever all the way to the right!" Image="Folie58.jpg" Timeout="90000">Tester.TransferInputs.AI_10_03:INT&lt;2000</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn black lever all the way to the left" Image="Folie59.jpg" Timeout="90000">Tester.TransferInputs.AI_10_03:INT&gt;14000</TestStep>
+
+		<TestStep Action="ADSCheck" UserMessage="Turn steering wheel slowly around!" Image="Folie60.jpg" Timeout="90000">Tester.TransferInputs.AI_10_05:INT&lt;2000</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Turn steering wheel some more!" Image="Folie60.jpg" Timeout="90000">Tester.TransferInputs.AI_10_05:INT&gt;14000</TestStep>
+
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_05=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Press the lift button on the remote!" Image="Folie61.jpg" Timeout="90000">Tester.TransferInputs.DI_2_05=true</TestStep>
+		
+		<TestStep Action="ADSCheck">Tester.TransferInputs.DI_2_04=false</TestStep>
+		<TestStep Action="ADSCheck" UserMessage="Press the fork push button on the remote!" Image="Folie62.jpg" Timeout="90000">Tester.TransferInputs.DI_2_04=true</TestStep>
+		
+
+		<!-- ################## -->
+		<!-- Find and Test CVC   -->
+		<!-- ################## -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Check CVC Connection ##############</TestStep>
+		<TestStep Action="Ping" Timeout="30000">CVC</TestStep>
+		<TestStep Action="CheckIfURLContains">http://[CVC]/cgi-bin/version/index.cgi contains([SerialNoCVC]:='HardwareSerialNumber&lt;\/td&gt;\s*?&lt;td&gt;.*?&lt;\/td&gt;\s*?&lt;td&gt;(\S*).*&lt;\/td&gt;')=true</TestStep>
+
+		<!-- ############## -->
+		<!-- Input Serials  -->
+		<!-- ############## -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Get serial numbers ##############</TestStep>
+		<TestStep Action="ReadBarcode" Image="Folie68.jpg">[SerialNoDisplay]:=Display(^(\d{6}-\d{5})$)</TestStep>
+		<TestStep Action="ReadBarcode" Image="Folie86.jpg">[SerialNoKonzDisplay]:=KonzernDisplay(^(\w+)$)</TestStep>
+	</TestSteps>			
+	<TearDownSteps>
+		<!-- ########## -->
+		<!-- Tear Down  -->
+		<!-- ########## -->
+		<TestStep Action="LogMessage"> </TestStep>
+		<TestStep Action="LogMessage">############## Shutting down ##############</TestStep>
+		<TestStep Action="ADSWrite">SUT.TesterServer.TesterProgram:STRING:=Off</TestStep>
+		<TestStep Action="ADSDisconnect">SUT</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_01:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_02:=false</TestStep>
+		<TestStep Action="ADSWrite">Tester.TransferOutputs.DO_4_03:=false</TestStep>
+		<TestStep Action="ADSDisconnect">Tester</TestStep>
+	</TearDownSteps>
+</TestScript>
+
+
